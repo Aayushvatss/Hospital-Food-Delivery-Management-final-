@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  role     Role
+}
+
+model Patient {
+  id               Int         @id @default(autoincrement())
+  name             String
+  diseases         String[]
+  allergies        String[]
+  roomNumber       String
+  bedNumber        String
+  floorNumber      String
+  age              Int
+  gender           String
+  contactInfo      String
+  emergencyContact String
+  dietCharts       DietChart[]
+}
+
+model DietChart {
+  id            Int      @id @default(autoincrement())
+  patientId     Int
+  patient       Patient  @relation(fields: [patientId], references: [id])
+  morningMeal   Meal
+  eveningMeal   Meal
+  nightMeal     Meal
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Meal {
+  id           Int        @id @default(autoincrement())
+  ingredients  String[]
+  instructions String
+  DietChart    DietChart? @relation(fields: [dietChartId], references: [id])
+  dietChartId  Int?
+}
+
+model PantryStaff {
+  id          Int         @id @default(autoincrement())
+  name        String
+  contactInfo String
+  location    String
+  tasks       PantryTask[]
+}
+
+model PantryTask {
+  id            Int         @id @default(autoincrement())
+  staffId       Int
+  staff         PantryStaff @relation(fields: [staffId], references: [id])
+  dietChartId   Int
+  dietChart     DietChart   @relation(fields: [dietChartId], references: [id])
+  status        TaskStatus
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model DeliveryPersonnel {
+  id          Int        @id @default(autoincrement())
+  name        String
+  contactInfo String
+  deliveries  Delivery[]
+}
+
+model Delivery {
+  id                  Int                @id @default(autoincrement())
+  personnelId         Int
+  personnel           DeliveryPersonnel  @relation(fields: [personnelId], references: [id])
+  pantryTaskId        Int
+  pantryTask          PantryTask         @relation(fields: [pantryTaskId], references: [id])
+  status              DeliveryStatus
+  deliveredAt         DateTime?
+  notes               String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+enum Role {
+  HOSPITAL_MANAGER
+  PANTRY_STAFF
+  DELIVERY_PERSONNEL
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+}
+
